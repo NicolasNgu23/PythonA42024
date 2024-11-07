@@ -1,0 +1,18 @@
+{
+  "resourceName": "users1",
+  "tableName": "users1",
+  "partitionKey": {
+    "fieldName": "id",
+    "fieldType": "string"
+  },
+  "gsi": [
+    {
+      "name": "emails1",
+      "partitionKey": {
+        "fieldName": "email1",
+        "fieldType": "string"
+      }
+    }
+  ],
+  "triggerFunctions": []
+}

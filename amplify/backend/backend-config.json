@@ -1,0 +1,104 @@
+{
+  "api": {
+    "users": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "manageUser"
+        },
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "manageEmail"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
+    }
+  },
+  "function": {
+    "manageEmail": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn",
+            "StreamArn"
+          ],
+          "category": "storage",
+          "resourceName": "users1"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "manageUser": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn",
+            "StreamArn"
+          ],
+          "category": "storage",
+          "resourceName": "users1"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_manageEmail_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "manageEmail"
+        }
+      ]
+    },
+    "AMPLIFY_function_manageEmail_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "manageEmail"
+        }
+      ]
+    },
+    "AMPLIFY_function_manageUser_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "manageUser"
+        }
+      ]
+    },
+    "AMPLIFY_function_manageUser_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "manageUser"
+        }
+      ]
+    }
+  },
+  "storage": {
+    "users1": {
+      "providerPlugin": "awscloudformation",
+      "service": "DynamoDB"
+    },
+    "users2": {
+      "providerPlugin": "awscloudformation",
+      "service": "DynamoDB"
+    }
+  }
+}
