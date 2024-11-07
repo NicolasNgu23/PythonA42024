@@ -6,80 +6,88 @@ import boto3
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 
-def handler(event, context):
+def manageUser(event, context):
     user_table_name = os.environ.get("STORAGE_USERS1_NAME")
     dynamodb = boto3.resource('dynamodb', region_name="eu-west-1")
     table = dynamodb.Table(user_table_name)
 
-    user_id = event['headers'].get('x-api-key')
+    api_key = event['headers'].get('x-api-key')
 
-    if user_id:
-        try:
-            res = table.query(
-                IndexName='emails1',
-                KeyConditionExpression=Key('email1').eq(user_id)
-            )
+    if not api_key:
+        return {
+            "statusCode": 400,
+            "body": json.dumps({
+                "error": "Missing x-api-key"
+            })
+        }
 
-            if 'Items' in res and res['Items']:
-                existing_user = res['Items'][0]
-                print(existing_user)
-                return {
-                    "statusCode": 200,
-                    "body": json.dumps({
-                        "message": "User found",
-                        "email": existing_user['email1']
-                    })
-                }
-            else:
-                return {
-                    "statusCode": 404,
-                    "body": json.dumps({
-                        "error": "User not found"
-                    })
-                }
-        except ClientError as e:
-            return {
-                "statusCode": 500,
-                "body": json.dumps({
-                    "error": "DynamoDB ClientError",
-                    "message": str(e)
-                })
-            }
-    else:
-        new_user_id = str(uuid.uuid4())
-        created_email = f"user_{new_user_id}@example.com"
-        hashCombi = f"{new_user_id}{created_email}"
+    try:
+
+        response = table.scan(
+            FilterExpression=Key('id').eq(api_key)
+        )
+
+        if response['Items']:
+            for item in response['Items']:
+                if item.get('id') == api_key:
+                    email = item.get('email1')
+                    return {
+                        "statusCode": 200,
+                        "body": json.dumps({
+                            "message": "User found",
+                            "email": email
+                        })
+                    }
+
+        user_id = str(uuid.uuid4())
+        created_email = f"user_{user_id}@example.com"
+        hashCombi = f"{user_id}{created_email}"
         hash_id = hashlib.sha256(hashCombi.encode()).hexdigest()
 
         new_user = {
-            'id': new_user_id,
+            'id': api_key,
             'email1': created_email,
             'hashId': hash_id
         }
 
-        try:
-            table.put_item(Item=new_user)
+        table.put_item(Item=new_user)
 
-            return {
-                "statusCode": 200,
-                "body": json.dumps({
-                    "message": "User created successfully",
-                    "user": new_user
-                })
-            }
-        except ClientError as e:
-            return {
-                "statusCode": 500,
-                "body": json.dumps({
-                    "error": "DynamoDB ClientError",
-                    "message": str(e)
-                })
-            }
-        except Exception as e:
-            return {
-                "statusCode": 500,
-                "body": json.dumps({
-                    "error": "Unexpected error",
-                    "message": str(e)
-                })
-            }
+        return {
+            "statusCode": 201,
+            "body": json.dumps({
+                "message": "User created successfully",
+                "user_id": user_id,
+                "email": created_email,
+                "hashId": hash_id
+            })
+        }
+
+    except ClientError as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "error": "DynamoDB ClientError",
+                "message": str(e)
+            })
+        }
+
+    except ValueError as e:
+        return {
+            "statusCode": 400,
+            "body": json.dumps({
+                "error": "Invalid input",
+                "message": str(e)
+            })
+        }
+
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "error": "Unexpected error",
+                "message": str(e)
+            })
+        }
+
+def handler(event, context):
+    return manageUser(event, context)

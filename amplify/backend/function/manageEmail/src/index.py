@@ -19,48 +19,47 @@ def getToken(event, context):
         }
 
     try:
-
-        print(email)
-        res = table.query(
-            IndexName='emails1',
-            KeyConditionExpression=Key('email1').eq(email)
+        response = table.scan(
+            FilterExpression=Key('email1').eq(email)
         )
-        print(res)
-        if res['Items']:
-            user_id = res['Items'][0].get('id')
-            hash_value = res['Items'][0].get('hashId')
-            print("User already exists")
 
-            return {
-                "statusCode": 200,
-                "body": json.dumps({
-                    "user_id": user_id,
-                    "email": email,
-                    "hash_value": hash_value
-                })
-            }
-        else:
-            user_id = str(uuid.uuid4())
-            hashCombi = f"{user_id}{email}"
-            hash_id = hashlib.sha256(hashCombi.encode()).hexdigest()
+        if response['Items']:
+            for item in response['Items']:
+                if item.get('email1') == email:
+                    user_id = item.get('id')
+                    hash_value = item.get('hashId')
+                    print(f"User with email {email} already exists.")
 
-            new_user = {
-                'id': user_id,
-                'email1': email,
-                'hashId': hash_id
-            }
+                    return {
+                        "statusCode": 200,
+                        "body": json.dumps({
+                            "user_id": user_id,
+                            "email": email,
+                            "hash_value": hash_value
+                        })
+                    }
+        user_id = str(uuid.uuid4())
+        hashCombi = f"{user_id}{email}"
+        hash_id = hashlib.sha256(hashCombi.encode()).hexdigest()
 
-            table.put_item(Item=new_user)
-            print("New user created")
+        new_user = {
+            'id': user_id,
+            'email1': email,
+            'hashId': hash_id
+        }
 
-            return {
-                "statusCode": 201,
-                "body": json.dumps({
-                    "message": "User created successfully",
-                    "email": email,
-                    "hashId": hash_id
-                })
-            }
+        table.put_item(Item=new_user)
+        print(f"New user with email {email} created.")
+
+        return {
+            "statusCode": 201,
+            "body": json.dumps({
+                "message": "User created successfully",
+                "user_id": user_id,
+                "email": email,
+                "hashId": hash_id
+            })
+        }
 
     except ClientError as e:
         return {

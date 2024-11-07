@@ -15,11 +15,11 @@
       "function": {
         "manageUser": {
           "deploymentBucketName": "amplify-api2024-dev-91cfb-deployment",
-          "s3Key": "amplify-builds/manageUser-4633714a526838767338-build.zip"
+          "s3Key": "amplify-builds/manageUser-476f3474303174306644-build.zip"
         },
         "manageEmail": {
           "deploymentBucketName": "amplify-api2024-dev-91cfb-deployment",
-          "s3Key": "amplify-builds/manageEmail-306b4a596b3538375379-build.zip"
+          "s3Key": "amplify-builds/manageEmail-5966582b49424648702b-build.zip"
         }
       },
       "api": {
